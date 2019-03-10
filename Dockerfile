@@ -1,7 +1,13 @@
 FROM golang:alpine AS build-env
 WORKDIR /go/src
 COPY . /go/src/app/
-RUN go build app/main.go
+RUN set -xe \\
+    && apk add --no-cache bash git
+RUN go get -u github.com/golang/dep/cmd/dep
+
+WORKDIR /go/src/app
+RUN dep init
+RUN go build main.go
 #go build command creates a linux binary that can run without any go tooling.
 
 FROM alpine
@@ -13,7 +19,7 @@ COPY --from=build-env /go/src/app/form /app/form
 #COPY --from=build-env /go/src/welcome-app/static /app/static
 #Here we copy the binary from the first image (build-env) to the new alpine container as well as the html and css
 
-EXPOSE 8080
+EXPOSE 3000
 ENTRYPOINT [ "./main" ]
 
 
@@ -34,8 +40,8 @@ ENTRYPOINT [ "./main" ]
 # RUN cd /go/src && go build -o main
 # # Check into our working directory, build our main.go
 
-# EXPOSE 8080
-# # This tells Docker to expose a certain port that can be listened to. This is important since our application is exposing on Port 8080, we need Docker to also expose on this port so that external sources can interact with our app.
+# EXPOSE 3000
+# # This tells Docker to expose a certain port that can be listened to. This is important since our application is exposing on Port 3000, we need Docker to also expose on this port so that external sources can interact with our app.
 
 # ENTRYPOINT "./main"
 # # This is the first command to run once the container starts, turning it into an automatically running welcome-app server.
